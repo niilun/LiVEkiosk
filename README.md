@@ -28,6 +28,11 @@ It also works if a video is provided, in which case it will be loaded instantly.
 
 > **NOTE:** these can be **images** or **gifs** but NOT **videos**.
 
+## Autoplay
+
+The stream is supposed to autoplay, however most browsers **refuse** to play video automatically, more so with audio, **until the user has interacted with the page**.
+This isn't fixable on the server, the client (browser) either has to **interact** (click something) on the webpage, or **allow it manually**.
+
 ## Extra info / Acknowledgments
 
 The backend runs under [**Flask**](https://flask.palletsprojects.com/en/stable/), and the frontend is powered by [**React**](https://react.dev/)

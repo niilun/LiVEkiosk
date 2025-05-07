@@ -3,13 +3,12 @@ import axios from 'axios';
 import queryString from 'query-string'
 import './LiVEkiosk.css';
 
-// time (in miliseconds), the delay to querying the backend again
+// the delay (in miliseconds), for query the backend
 const checkCooldown = 30000;
 
 function LiVEkiosk() {
   const [isLive, setIsLive] = useState(false);
   const [isCheckCompleted, setIsCheckCompleted] = useState(false);
-  const [isCountdownSet, setIsCountdownSet] = useState(false);
   const [message, setMessage] = useState('');
   const [messageMin, setMessageMin] = useState('');
   const [scheduledStartTime, setScheduledStartTime] = useState(null);
@@ -21,7 +20,7 @@ function LiVEkiosk() {
     try {
       // if id isn't provided, show error
       if (!queryIdParam) {
-        console.log('id not provided in request!')
+        console.log('ID not provided in request! End your URL with ?id=some_video_id.')
         setMessage('VIDEO ID MISSING')
         setMessageMin('')
         return
@@ -33,25 +32,28 @@ function LiVEkiosk() {
       
       // if it's reported as a video or live, load it
       if (video_request.data.is_live || video_request.data.is_video) {
+        console.log('Stream found! Loading embed...')
         setMessage('FOUND')
         setMessageMin('LOADING...');
         await new Promise(video_request_solve => setTimeout(video_request_solve, 2000));
+
         setIsLive(true);
       } else {
         // if it's a scheduled video, set the start time and notify user (set only once)
+        console.log(`Stream is scheduled, re-checking in ${checkCooldown / 1000}s`)
         setMessage('STREAM SCHEDULED');
         setMessageMin('CHECKING AGAIN IN');
+
         if (!scheduledStartTime) {
           setScheduledStartTime((prev) => prev || video_request.data.scheduled_start_time);
-          setIsCountdownSet(true);
         }
       }
       // so the countdown doesn't show before it's actually checked
       setIsCheckCompleted(true);
-    } catch (err) {
+    } catch (error) {
       setMessage('ERROR')
-      setMessageMin(err.message || 'An error occurred')
-      console.error('failed to fetch live status:', err);
+      setMessageMin(error.message || 'An error occurred')
+      console.error(`Failed to fetch live status: ${error}, check if backend is active!`);
     }
   };
 
@@ -82,7 +84,7 @@ function LiVEkiosk() {
 
         if (timeRemaining <= 0) {
           clearInterval(interval);
-          setCountdown('LIVE NOW');
+          setCountdown('Live now!');
         } else {
           const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
           const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
@@ -103,7 +105,7 @@ function LiVEkiosk() {
           src={`https://www.youtube.com/embed/${queryIdParam}?autoplay=1`}
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
           allowFullScreen
-          title="YouTube Live"
+          title="YouTube embed"
         />
       ) : (
         <div className="waiting-screen">
