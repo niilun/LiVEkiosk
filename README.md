@@ -15,6 +15,8 @@ It also works if a video is provided, in which case it will be loaded instantly.
     - navigate to the `backend` folder and run the backend server `py`/`python`/`python3` `server.py`. 
     - go to the `frontend` folder and run `npm start` in another terminal.
 
+4. To load LiVEkiosk for a specific video, go to `http://localhost:3000?id=your_youtube_id`, where your_youtube_id is the ID (the string after `?v=` in a youtube link) of the video/stream.
+
 > **NOTE:** The **backend** runs on `localhost:5000` and the **frontend** on `localhost:3000`
 
 ## Customization
