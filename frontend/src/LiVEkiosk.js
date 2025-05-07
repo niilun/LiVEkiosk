@@ -9,6 +9,7 @@ const checkCooldown = 30000;
 function LiVEkiosk() {
   const [isLive, setIsLive] = useState(false);
   const [isCheckCompleted, setIsCheckCompleted] = useState(false);
+  const [isCountdownSet, setIsCountdownSet] = useState(false);
   const [message, setMessage] = useState('');
   const [messageMin, setMessageMin] = useState('');
   const [scheduledStartTime, setScheduledStartTime] = useState(null);
@@ -34,14 +35,15 @@ function LiVEkiosk() {
       if (video_request.data.is_live || video_request.data.is_video) {
         setMessage('FOUND')
         setMessageMin('LOADING...');
-        await new Promise(video_requestolve => setTimeout(video_requestolve, 2000));
+        await new Promise(video_request_solve => setTimeout(video_request_solve, 2000));
         setIsLive(true);
       } else {
-        // if it's a scheduled video, set the start time and notify user
-        if (video_request.data.is_scheduled) {
-          setMessage('STREAM SCHEDULED');
-          setMessageMin('CHECKING AGAIN IN');
-          setScheduledStartTime(video_request.data.scheduled_start_time);
+        // if it's a scheduled video, set the start time and notify user (set only once)
+        setMessage('STREAM SCHEDULED');
+        setMessageMin('CHECKING AGAIN IN');
+        if (!scheduledStartTime) {
+          setScheduledStartTime((prev) => prev || video_request.data.scheduled_start_time);
+          setIsCountdownSet(true);
         }
       }
       // so the countdown doesn't show before it's actually checked
