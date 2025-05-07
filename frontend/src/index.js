@@ -6,9 +6,11 @@ import LiVEkiosk from './LiVEkiosk';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
     <LiVEkiosk />
-  </React.StrictMode>
 );
 
-reportWebVitals(console.log);
+const reportVitals = (message) => {
+    console.log('WebVitals report: ', message);
+}
+
+reportWebVitals(reportVitals);

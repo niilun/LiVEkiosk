@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import queryString from 'query-string'
 import { playSound } from './playSound'
@@ -7,15 +7,19 @@ import './LiVEkiosk.css'
 // the delay (in miliseconds), for query the backend
 const checkCooldown = 30000
 // should a sound notification be played when stream is live?
-const doNotification = false
+const doNotification = true
+// name of the ready sound file, should be placed in frontend/public
+const readySoundFile = 'ready.mp3'
+const readySoundVolume = 1.0
 
 function LiVEkiosk() {
   const [isLive, setIsLive] = useState(false)
   const [isCheckCompleted, setIsCheckCompleted] = useState(false)
+  const didReadySoundPlay = useRef(false)
   const [message, setMessage] = useState('')
   const [messageMin, setMessageMin] = useState('')
   const [scheduledStartTime, setScheduledStartTime] = useState(null)
-  const [countdown, setCountdown] = useState(null)
+  const [countdownMessage, setcountdownMessage] = useState(null)
   const [nextCheckCountdown, setNextCheckCountdown] = useState(30)
   const queryIdParam = queryString.parse(window.location.search).id
 
@@ -28,18 +32,22 @@ function LiVEkiosk() {
         setMessageMin('')
         return
       }
-
+      
       // initiate request
       setMessage('CHECKING STATUS')
       const video_request = await axios.get(`http://localhost:5000/youtube_info?id=${queryIdParam}`)
       
       // if it's reported as a video or live, load it
       if (video_request.data.is_live || video_request.data.is_video) {
-        console.log('Stream found! Loading embed...')
+        console.log('Stream found!')
         setMessage('FOUND')
         setMessageMin('LOADING...')
-        playSound(doNotification, 'ready.ogg')
-        await new Promise(video_request_solve => setTimeout(video_request_solve, 2000))
+        if (!didReadySoundPlay.current) {
+          playSound(doNotification, readySoundFile, readySoundVolume)
+          didReadySoundPlay.current = true
+        }
+
+        await new Promise(video_request_solve => setTimeout(video_request_solve, 5000))
 
         setIsLive(true)
       } else {
@@ -47,7 +55,6 @@ function LiVEkiosk() {
         console.log(`Stream is scheduled, re-checking in ${checkCooldown / 1000}s`)
         setMessage('STREAM SCHEDULED')
         setMessageMin('CHECKING AGAIN IN')
-
         if (!scheduledStartTime) {
           setScheduledStartTime((prev) => prev || video_request.data.scheduled_start_time)
         }
@@ -88,12 +95,12 @@ function LiVEkiosk() {
 
         if (timeRemaining <= 0) {
           clearInterval(interval)
-          setCountdown('Live now!')
+          setcountdownMessage('Live now!')
         } else {
           const hours = Math.floor(timeRemaining / (1000 * 60 * 60))
           const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
           const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000)
-          setCountdown(`${hours}h ${minutes}m ${seconds}s`)
+          setcountdownMessage(`${hours}h ${minutes}m ${seconds}s`)
         }
       }, 1000)
       return () => clearInterval(interval)
@@ -116,7 +123,7 @@ function LiVEkiosk() {
           <h1>{message}</h1>
           {scheduledStartTime && (
             <div>
-              <p>STARTING IN: {countdown}</p>
+              <p>STARTING IN: {countdownMessage}</p>
             </div>
           )}
           <p>{messageMin}{isCheckCompleted ? ` ${nextCheckCountdown}s` : ''}</p>
