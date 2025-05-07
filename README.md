@@ -21,17 +21,20 @@ It also works if a video is provided, in which case it will be loaded instantly.
 
 ## Customization
 
-- **LiVEkiosk** can be customized by replacing the following files:
-    - **watermark**, in `frontend/public/watermark.png` - the watermark placed in the top right of the webpage.
-    - **background**, in `frontend/src/background.jpg` - the background image of the whole webpage.
-    - **background-info**, in `frontend/src/background-info.png` - the background image of the status box.
+- **LiVEkiosk** has several elements that can be customized:
+    - a **watermark**, in `frontend/public/watermark.png` - the watermark placed in the top right of the webpage.
+    - the **background**, in `frontend/src/background.jpg` - the background image of the whole webpage.
+    - the **background-info** box, in `frontend/src/background-info.png` - the background image of the status box.
+    - a **notification** sound effect to be played when the stream is live, requiring the variable `doNotification` to be set to `true` and a `ready.ogg/mp3/wav/etc.` audio file be placed in `frontend/public`.
 
 > **NOTE:** these can be **images** or **gifs** but NOT **videos**.
 
-## Autoplay
+## Troubleshooting autoplay
 
 The stream is supposed to autoplay, however most browsers **refuse** to play video automatically, more so with audio, **until the user has interacted with the page**.
 This isn't fixable on the server, the client (browser) either has to **interact** (click something) on the webpage, or **allow it manually**.
+
+Not interacting with the webpage also prevents the **notification** from being played, until an interaction is done.
 
 ## Extra info / Acknowledgments
 

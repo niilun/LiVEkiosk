@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import queryString from 'query-string'
-import './LiVEkiosk.css';
+import { playSound } from './playSound'
+import './LiVEkiosk.css'
 
 // the delay (in miliseconds), for query the backend
-const checkCooldown = 30000;
+const checkCooldown = 30000
+// should a sound notification be played when stream is live?
+const doNotification = false
 
 function LiVEkiosk() {
-  const [isLive, setIsLive] = useState(false);
-  const [isCheckCompleted, setIsCheckCompleted] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageMin, setMessageMin] = useState('');
-  const [scheduledStartTime, setScheduledStartTime] = useState(null);
-  const [countdown, setCountdown] = useState(null);
-  const [nextCheckCountdown, setNextCheckCountdown] = useState(30);
-  const queryIdParam = queryString.parse(window.location.search).id;
+  const [isLive, setIsLive] = useState(false)
+  const [isCheckCompleted, setIsCheckCompleted] = useState(false)
+  const [message, setMessage] = useState('')
+  const [messageMin, setMessageMin] = useState('')
+  const [scheduledStartTime, setScheduledStartTime] = useState(null)
+  const [countdown, setCountdown] = useState(null)
+  const [nextCheckCountdown, setNextCheckCountdown] = useState(30)
+  const queryIdParam = queryString.parse(window.location.search).id
 
   const checkLiveStatus = async () => { 
     try {
@@ -27,74 +30,75 @@ function LiVEkiosk() {
       }
 
       // initiate request
-      setMessage('CHECKING STATUS');
-      const video_request = await axios.get(`http://localhost:5000/youtube_info?id=${queryIdParam}`);
+      setMessage('CHECKING STATUS')
+      const video_request = await axios.get(`http://localhost:5000/youtube_info?id=${queryIdParam}`)
       
       // if it's reported as a video or live, load it
       if (video_request.data.is_live || video_request.data.is_video) {
         console.log('Stream found! Loading embed...')
         setMessage('FOUND')
-        setMessageMin('LOADING...');
-        await new Promise(video_request_solve => setTimeout(video_request_solve, 2000));
+        setMessageMin('LOADING...')
+        playSound(doNotification, 'ready.ogg')
+        await new Promise(video_request_solve => setTimeout(video_request_solve, 2000))
 
-        setIsLive(true);
+        setIsLive(true)
       } else {
         // if it's a scheduled video, set the start time and notify user (set only once)
         console.log(`Stream is scheduled, re-checking in ${checkCooldown / 1000}s`)
-        setMessage('STREAM SCHEDULED');
-        setMessageMin('CHECKING AGAIN IN');
+        setMessage('STREAM SCHEDULED')
+        setMessageMin('CHECKING AGAIN IN')
 
         if (!scheduledStartTime) {
-          setScheduledStartTime((prev) => prev || video_request.data.scheduled_start_time);
+          setScheduledStartTime((prev) => prev || video_request.data.scheduled_start_time)
         }
       }
       // so the countdown doesn't show before it's actually checked
-      setIsCheckCompleted(true);
+      setIsCheckCompleted(true)
     } catch (error) {
       setMessage('ERROR')
       setMessageMin(error.message || 'An error occurred')
-      console.error(`Failed to fetch live status: ${error}, check if backend is active!`);
+      console.error(`Failed to fetch live status: ${error}, check if backend is active!`)
     }
-  };
+  }
 
   // run checkLiveStatus() every 30s
   useEffect(() => {
-    checkLiveStatus();
+    checkLiveStatus()
     const interval = setInterval(() => {
-      checkLiveStatus();
-      setNextCheckCountdown(30);
-    }, checkCooldown);
-    return () => clearInterval(interval);
-  }, []);
+      checkLiveStatus()
+      setNextCheckCountdown(30)
+    }, checkCooldown)
+    return () => clearInterval(interval)
+  }, [])
 
   // updates the cooldown to be shown on screen
   useEffect(() => {
     const interval = setInterval(() => {
-      setNextCheckCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+      setNextCheckCountdown((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     if (scheduledStartTime) {
       const interval = setInterval(() => {
-        const now = new Date();
-        const startDate = new Date(scheduledStartTime * 1000);
-        const timeRemaining = startDate - now;
+        const now = new Date()
+        const startDate = new Date(scheduledStartTime * 1000)
+        const timeRemaining = startDate - now
 
         if (timeRemaining <= 0) {
-          clearInterval(interval);
-          setCountdown('Live now!');
+          clearInterval(interval)
+          setCountdown('Live now!')
         } else {
-          const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-          const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-          setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+          const hours = Math.floor(timeRemaining / (1000 * 60 * 60))
+          const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+          const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000)
+          setCountdown(`${hours}h ${minutes}m ${seconds}s`)
         }
-      }, 1000);
-      return () => clearInterval(interval);
+      }, 1000)
+      return () => clearInterval(interval)
     }
-  }, [scheduledStartTime]);
+  }, [scheduledStartTime])
 
   return (
     <div className="App">
@@ -119,7 +123,7 @@ function LiVEkiosk() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export default LiVEkiosk;
